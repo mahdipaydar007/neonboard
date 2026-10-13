@@ -37,7 +37,7 @@ It is built with plain HTML, CSS and vanilla JavaScript, with no framework, pack
 No installation is needed.
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/mahdipaydar007/neonboard
 cd neonboard
 ```
 
@@ -89,5 +89,4 @@ Issues and pull requests are welcome. For larger changes, please open an issue f
 4. Push the branch and open a pull request
 
 ## License
-
-[Add your chosen license here, for example MIT, and include a `LICENSE` file.]
+This repository contains *MIT* license
