@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en" data-accent="cyan" data-scan="on" data-glow="on" data-motion="full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Neonboard</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#view">Skip to content</a>
+
+  <div class="app">
+    <aside class="side" aria-label="Primary">
+      <a class="brand" href="#/dashboard" aria-label="Neonboard home">
+        <svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M3 3h15l7 7v15H10l-7-7z" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M9 20V9l10 11V9" fill="none" stroke="var(--accent-2)" stroke-width="2" stroke-linecap="square"/>
+        </svg>
+        <span class="brand-name">Neonboard</span>
+      </a>
+      <nav id="nav" class="nav" aria-label="Sections"></nav>
+      <div class="side-foot"><span class="dot" aria-hidden="true"></span><span id="save-badge">Saved on this device</span></div>
+    </aside>
+
+    <div class="main">
+      <header class="top">
+        <label class="search">
+          <span class="sr-only">Search tasks</span>
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Search tasks  ( / )" autocomplete="off">
+        </label>
+        <div class="spacer"></div>
+        <div class="clock" aria-hidden="true"><span id="clock-time">--:--</span><span id="clock-date"></span></div>
+        <button class="btn primary" type="button" data-action="new-task">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="btn-label">New task</span>
+        </button>
+        <a class="avatar-btn" href="#/account" id="avatar" aria-label="Open account"></a>
+      </header>
+
+      <main id="view" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <dialog id="modal"></dialog>
+  <div id="toasts" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
