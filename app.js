@@ -52,7 +52,8 @@ const ICONS = {
   check: '<path d="M5 12l5 5 9-10"/>',
   flame: '<path d="M12 22c4 0 7-3 7-7 0-3-2-5-3-7-1 2-2 3-4 3 0-4-2-6-4-8-1 4-3 6-3 11 0 4 3 8 7 8z"/>',
   download: '<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
-  upload: '<path d="M12 15V3M7 8l5-5 5 5M4 21h16"/>'
+  upload: '<path d="M12 15V3M7 8l5-5 5 5M4 21h16"/>',
+  guide: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17h.01"/>'
 };
 const icon = (n, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">${ICONS[n]}</svg>`;
 
@@ -712,9 +713,92 @@ function vNotFound() {
   </section>`;
 }
 
+/* Guide */
+function vGuide() {
+  const step = (n, title, text, href, label) => `<li class="g-step"><span class="g-n">${n}</span>
+    <div><h3>${title}</h3><p class="muted-p">${text}</p><a class="btn ghost sm" href="${href}">${label}</a></div></li>`;
+  const feat = (id, title, items, href, label) => `<section class="panel s4" aria-labelledby="g-${id}">
+    <div class="panel-head"><h2 id="g-${id}">${title}</h2><a class="link" href="${href}">${label}</a></div>
+    <ul class="g-list">${items.map(i => `<li>${i}</li>`).join('')}</ul></section>`;
+  const faq = (q, a) => `<details><summary>${q}</summary><p>${a}</p></details>`;
+
+  return `
+  <div class="page-head"><div><h1>Guide</h1><p class="sub">Everything Neonboard does, on one screen</p></div></div>
+  <div class="grid">
+    <section class="panel hot s12" aria-labelledby="g-start">
+      <div class="panel-head"><h2 id="g-start">Quick start</h2></div>
+      <ol class="g-steps">
+        ${step(1, 'Add a task', 'Type a title in the quick-add bar on the Tasks page, or press <kbd>N</kbd> anywhere.', '#/tasks', 'Open Tasks')}
+        ${step(2, 'Start a timer', 'Set minutes for a countdown, or 0 for a stopwatch.', '#/timers', 'Open Timers')}
+        ${step(3, 'Build a routine', 'Pick the days it repeats, then tick it off each day to grow a streak.', '#/routines', 'Open Routines')}
+      </ol>
+    </section>
+
+    ${feat('dash', 'Dashboard', [
+    'The ring shows how much of today\'s plan is done: tasks due today, overdue tasks, and anything you finished today.',
+    'Timers, today\'s routines, project progress and a 7-day completion chart sit below it.'
+  ], '#/dashboard', 'Open')}
+    ${feat('tasks', 'Tasks', [
+    'Quick-add takes a title, priority, due date and optional notes.',
+    'Filter and sort the list, or search with <kbd>/</kbd>.',
+    'The play button marks a task <b>In progress</b>. Deleting shows an <b>Undo</b>.',
+    '<b>Clear completed</b> removes all finished tasks at once.'
+  ], '#/tasks', 'Open')}
+    ${feat('cal', 'Calendar', [
+    'Tasks appear on their due date.',
+    'Click a day to see its tasks or add a new one on that day.',
+    'Change the first day of the week in Account, Appearance.'
+  ], '#/calendar', 'Open')}
+    ${feat('timers', 'Timers', [
+    'Minutes above 0 make a countdown. 0 makes a stopwatch.',
+    'Timers use the real clock, so they keep running through a page reload.',
+    'Starting a timer linked to a task moves that task to In progress.',
+    'A countdown beeps when it ends. You can turn the sound off in Account, Appearance.'
+  ], '#/timers', 'Open')}
+    ${feat('proj', 'Projects', [
+    'Each project is a board with To do, In progress and Done columns.',
+    'Drag cards between columns, or use the arrow buttons.',
+    'Deleting a project keeps its tasks. They just become unassigned.'
+  ], '#/projects', 'Open')}
+    ${feat('rout', 'Routines', [
+    'A routine repeats on the days you choose.',
+    'Click any of the last 7 days to tick it or fix a mistake.',
+    'A streak counts consecutive <b>scheduled</b> days. Days off are skipped, and today only breaks it once the day has passed.'
+  ], '#/routines', 'Open')}
+
+    <section class="panel s6" aria-labelledby="g-keys">
+      <div class="panel-head"><h2 id="g-keys">Shortcuts</h2></div>
+      <ul class="keys">
+        <li><span>Focus the search box</span><kbd>/</kbd></li>
+        <li><span>New task</span><kbd>N</kbd></li>
+        <li><span>Close a dialog</span><kbd>Esc</kbd></li>
+      </ul>
+      <p class="muted-p" style="font-size:13px;margin-top:10px">Shortcuts are off while you are typing in a field or have a dialog open.</p>
+    </section>
+
+    <section class="panel s6" aria-labelledby="g-data">
+      <div class="panel-head"><h2 id="g-data">Your data</h2></div>
+      <p class="muted-p" style="margin-bottom:14px">Everything is stored in this browser only. There is no account and no server. Clearing site data, using a private window or switching browsers means your tasks will not be there, so export a backup now and then. Tabs of the same browser stay in sync.</p>
+      <div class="btn-row">
+        <button class="btn primary sm" type="button" data-action="export">${icon('download')}Export backup</button>
+        <button class="btn ghost sm" type="button" data-action="open-data">Data settings</button>
+      </div>
+    </section>
+
+    <section class="panel s12 faq" aria-labelledby="g-faq">
+      <div class="panel-head"><h2 id="g-faq">FAQ</h2></div>
+      ${faq('Why did my percentage change?', 'It is done tasks divided by planned tasks, where planned means due today, overdue, or finished today. Adding a task due today, or letting one pass its deadline, raises the total and lowers the percentage.')}
+      ${faq('Why is my timer late in a background tab?', 'Browsers slow down hidden tabs. The timer itself stays accurate because it uses the real clock, but the beep and the tab title can lag by up to a minute.')}
+      ${faq('Why did my streak reset?', 'A day the routine was scheduled passed without being ticked. Days it is not scheduled never count against you, and you can tick past days on the Routines page.')}
+      ${faq('Where did my tasks go?', 'Most likely the browser data was cleared, or you are in a different browser or private window. If you exported a backup, restore it in Account, Data, Import backup.')}
+      ${faq('Can I use it on two devices?', 'There is no automatic sync between devices. Export a backup on one and import it on the other. Importing replaces what is there.')}
+    </section>
+  </div>`;
+}
+
 /* Shell rendering */
-const NAV = [['dashboard', 'Dashboard'], ['tasks', 'Tasks'], ['calendar', 'Calendar'], ['timers', 'Timers'], ['projects', 'Projects'], ['routines', 'Routines'], ['account', 'Account']];
-const renderers = { dashboard: vDashboard, tasks: vTasks, calendar: vCalendar, timers: vTimers, projects: vProjects, routines: vRoutines, account: vAccount, notfound: vNotFound };
+const NAV = [['dashboard', 'Dashboard'], ['tasks', 'Tasks'], ['calendar', 'Calendar'], ['timers', 'Timers'], ['projects', 'Projects'], ['routines', 'Routines'], ['guide', 'Guide'], ['account', 'Account']];
+const renderers = { dashboard: vDashboard, tasks: vTasks, calendar: vCalendar, timers: vTimers, projects: vProjects, routines: vRoutines, guide: vGuide, account: vAccount, notfound: vNotFound };
 
 function renderNav() {
   const open = state.tasks.filter(t => t.status !== 'done').length;
@@ -849,8 +933,11 @@ function routineModal(r) {
 }
 
 function createProfile(name) {
-  state.profile = { name: name.trim().slice(0, 40) || 'Runner', handle: '', bio: '', color: PALETTE[0][1], createdAt: new Date().toISOString() };
-  saveNow();
+  function createProfile(name) {
+    state.profile = { name: name.trim().slice(0, 40) || 'Runner', handle: '', bio: '', color: PALETTE[0][1], createdAt: new Date().toISOString() };
+    saveNow();
+    toast('Welcome! New here? The guide takes a minute.', 'info', { label: 'Open guide', fn() { location.hash = '#/guide'; } });
+  }
 }
 function welcome() {
   const { dlg, form } = openModal({
@@ -987,6 +1074,7 @@ const actions = {
   'account-tab'(tab) { ui.accountTab = tab; render(); },
   'set-accent'(key) { state.settings.accent = key; applySettings(); save(); render(); },
   'export'() { exportData(); },
+  'open-data'() { ui.accountTab = 'data'; location.hash = '#/account'; },
   'import-pick'() { $('#import-file').click(); },
   'reset-all'() {
     confirmModal('Delete all data?', 'This removes your profile, tasks, projects, timers and routines from this browser. It cannot be undone.', 'Delete everything', () => {

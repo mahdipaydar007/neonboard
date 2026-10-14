@@ -1657,6 +1657,115 @@ html[data-motion="full"] .nf-cursor {
   }
 }
 
+/* Guide */
+.g-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.g-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.g-step h3 {
+  margin-bottom: 4px;
+}
+.g-step .btn {
+  margin-top: 10px;
+}
+.g-n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  font: normal 18px var(--mono);
+  color: var(--void);
+  background: var(--accent);
+  clip-path: polygon(
+    0 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% 100%,
+    8px 100%,
+    0 calc(100% - 8px)
+  );
+}
+.g-list {
+  display: grid;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.g-list li {
+  position: relative;
+  padding-left: 16px;
+}
+.g-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+}
+.g-list b {
+  color: var(--text);
+  font-weight: 500;
+}
+.keys li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+.keys li:last-child {
+  border-bottom: 0;
+}
+kbd {
+  font: normal 13px var(--mono);
+  padding: 2px 9px;
+  color: var(--accent);
+  background: var(--void);
+  border: 1px solid var(--line-2);
+  border-bottom-width: 2px;
+}
+.faq details {
+  border-bottom: 1px solid var(--line);
+}
+.faq details:last-child {
+  border-bottom: 0;
+}
+.faq summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary::after {
+  content: "+";
+  font-family: var(--mono);
+  color: var(--accent);
+}
+.faq details[open] summary::after {
+  content: "–";
+}
+.faq details p {
+  padding-bottom: 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 /* 6. Overlays -------------------------------------------------------------- */
 dialog {
   border: 0;
@@ -1983,6 +2092,9 @@ html[data-motion="full"] .readout.over {
   }
   .nf-code {
     font-size: 88px;
+  }
+  .g-steps {
+    grid-template-columns: 1fr;
   }
 }
 
