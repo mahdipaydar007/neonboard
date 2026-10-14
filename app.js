@@ -1231,7 +1231,7 @@ function route() {
   render();
   if (changed) {
     window.scrollTo(0, 0);
-    $('#view').focus({ preventScroll: true });
+    if (document.activeElement !== $('#search')) $('#view').focus({ preventScroll: true });
     const h = $('#view h1');                 // page title glitches once per navigation
     if (h) {
       h.classList.add('glitch-once');
