@@ -532,8 +532,10 @@ function vTimers() {
 
 /* Projects */
 function vProjects() {
-  const p = ui.param && projectOf(ui.param);
-  if (p) return vBoard(p);
+  if (ui.param) {
+    const p = projectOf(ui.param);
+    return p ? vBoard(p) : vNotFound();
+  }
   return `
   <div class="page-head"><div><h1>Projects</h1><p class="sub">${state.projects.length} ${state.projects.length === 1 ? 'project' : 'projects'}</p></div>
     <button class="btn primary" type="button" data-action="new-project">${icon('plus')}New project</button></div>
@@ -691,14 +693,34 @@ function vAccount() {
   </div>`;
 }
 
+/* 404 */
+function vNotFound() {
+  const path = esc((location.hash || '#/').slice(0, 60));
+  return `
+  <section class="nf">
+    <div class="panel hot nf-card">
+      <p class="nf-err">ERR_ROUTE_NOT_FOUND</p>
+      <h1 class="nf-code glow" data-text="404">404</h1>
+      <h2 class="nf-title">Signal lost</h2>
+      <p class="muted-p">There is nothing at this address. The page may have moved, or the project it pointed to was deleted.</p>
+      <p class="nf-path"><span aria-hidden="true">&gt;</span> ${path}<i class="nf-cursor" aria-hidden="true"></i></p>
+      <div class="btn-row">
+        <a class="btn primary" href="#/dashboard">${icon('left')}Back to dashboard</a>
+        <a class="btn ghost" href="#/tasks">Open tasks</a>
+      </div>
+    </div>
+  </section>`;
+}
+
 /* Shell rendering */
 const NAV = [['dashboard', 'Dashboard'], ['tasks', 'Tasks'], ['calendar', 'Calendar'], ['timers', 'Timers'], ['projects', 'Projects'], ['routines', 'Routines'], ['account', 'Account']];
-const renderers = { dashboard: vDashboard, tasks: vTasks, calendar: vCalendar, timers: vTimers, projects: vProjects, routines: vRoutines, account: vAccount };
+const renderers = { dashboard: vDashboard, tasks: vTasks, calendar: vCalendar, timers: vTimers, projects: vProjects, routines: vRoutines, account: vAccount, notfound: vNotFound };
 
 function renderNav() {
   const open = state.tasks.filter(t => t.status !== 'done').length;
   $('#nav').innerHTML = NAV.map(([k, l]) =>
-    `<a href="#/${k}" ${ui.view === k ? 'aria-current="page"' : ''}>${icon(k)}<span>${l}</span>${k === 'tasks' && open ? `<em class="count">${open}</em>` : ''}</a>`).join('');
+    `<a href="#/${k}" class="${ui.navGlitch === k ? 'glitch' : ''}" ${ui.view === k ? 'aria-current="page"' : ''}>${icon(k)}<span>${l}</span>${k === 'tasks' && open ? `<em class="count">${open}</em>` : ''}</a>`).join('');
+  ui.navGlitch = null;
 }
 function renderTop() {
   $('#avatar').innerHTML = avatar();
@@ -1095,16 +1117,39 @@ document.addEventListener('drop', e => {
   if (taskOf(id)) setStatus(id, col.dataset.status);
 });
 
+/* Glitch effect on nav links. The nav is rebuilt on each render, so we remember
+   the clicked link and render() applies the class to the fresh element. */
+$('#nav').addEventListener('click', e => {
+  const a = e.target.closest('a');
+  if (!a) return;
+  ui.navGlitch = a.getAttribute('href').replace(/^#\//, '');
+  if (a.getAttribute('aria-current') === 'page') {   // same page: no re-render will happen
+    a.classList.remove('glitch');
+    void a.offsetWidth;                                // restart the animation
+    a.classList.add('glitch');
+    a.addEventListener('animationend', () => a.classList.remove('glitch'), { once: true });
+    ui.navGlitch = null;
+  }
+});
+
 /* Routing uses the URL hash, so the browser's back and forward buttons work. */
-const VIEWS = Object.keys(renderers);
+const VIEWS = NAV.map(n => n[0]);   // real pages only, so #/notfound is itself a 404
 function route() {
   const parts = (location.hash.replace(/^#\/?/, '') || 'dashboard').split('/');
-  const view = VIEWS.includes(parts[0]) ? parts[0] : 'dashboard';
+  const view = VIEWS.includes(parts[0]) ? parts[0] : 'notfound';
   const changed = view !== ui.view || (parts[1] || null) !== ui.param;
   ui.view = view;
   ui.param = parts[1] ? parts[1].replace(/[^\w-]/g, '') : null;
   render();
-  if (changed) { window.scrollTo(0, 0); $('#view').focus({ preventScroll: true }); }
+  if (changed) {
+    window.scrollTo(0, 0);
+    $('#view').focus({ preventScroll: true });
+    const h = $('#view h1');                 // page title glitches once per navigation
+    if (h) {
+      h.classList.add('glitch-once');
+      h.addEventListener('animationend', () => h.classList.remove('glitch-once'), { once: true });
+    }
+  }
 }
 window.addEventListener('hashchange', route);
 
@@ -1192,7 +1237,7 @@ window.addEventListener('storage', e => {
 
 /* 7. Boot ------------------------------------------------------------------ */
 applySettings();
-state.timers.forEach(t => { if (t.target && t.startedAt && timerDisplay(t).over) ui.notified.add(t.id);});
+state.timers.forEach(t => { if (t.target && t.startedAt && timerDisplay(t).over) ui.notified.add(t.id); });
 route();
 if (!state.profile) welcome();
 setInterval(tick, 1000);

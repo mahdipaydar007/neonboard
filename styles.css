@@ -235,6 +235,10 @@ html[data-glow="on"] .glow {
   color: var(--accent);
   border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
 }
+html[data-motion="full"] .nav a.glitch span,
+html[data-motion="full"] .nav a.glitch svg {
+  animation: glitch 0.45s steps(2, end) 1;
+}
 .side-foot {
   display: flex;
   align-items: center;
@@ -1537,6 +1541,122 @@ button.cell:hover {
   gap: 10px;
 }
 
+/* 404 */
+.nf {
+  display: grid;
+  place-items: center;
+  min-height: calc(100vh - 160px);
+}
+.nf-card {
+  width: min(620px, 100%);
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+  padding: 38px;
+}
+.nf-err {
+  font: normal 13px var(--mono);
+  letter-spacing: 0.14em;
+  color: var(--magenta);
+}
+.nf-code {
+  position: relative;
+  font: normal 128px/1 var(--mono);
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.nf-code::before,
+.nf-code::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  display: none;
+  text-shadow: none;
+}
+.nf-title {
+  font-size: 24px;
+}
+.nf-path {
+  max-width: 100%;
+  padding: 8px 12px;
+  font: normal 14px var(--mono);
+  color: var(--muted);
+  background: var(--void);
+  border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.nf-path span {
+  color: var(--accent);
+  margin-right: 6px;
+}
+.nf-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  margin-left: 3px;
+  vertical-align: -2px;
+  background: var(--accent);
+}
+
+html[data-motion="full"] .nf-code::before {
+  display: block;
+  color: var(--magenta);
+  animation: nf-slice-a 3s steps(1, end) infinite;
+}
+html[data-motion="full"] .nf-code::after {
+  display: block;
+  color: var(--cyan);
+  animation: nf-slice-b 3s steps(1, end) infinite;
+}
+html[data-motion="full"] .nf-cursor {
+  animation: nf-blink 1s steps(1, end) infinite;
+}
+@keyframes nf-slice-a {
+  0%,
+  84%,
+  100% {
+    clip-path: inset(0 0 100% 0);
+    transform: none;
+  }
+  86% {
+    clip-path: inset(8% 0 58% 0);
+    transform: translateX(-6px);
+  }
+  90% {
+    clip-path: inset(62% 0 10% 0);
+    transform: translateX(5px);
+  }
+  94% {
+    clip-path: inset(30% 0 40% 0);
+    transform: translateX(-3px);
+  }
+}
+@keyframes nf-slice-b {
+  0%,
+  85%,
+  100% {
+    clip-path: inset(0 0 100% 0);
+    transform: none;
+  }
+  87% {
+    clip-path: inset(55% 0 15% 0);
+    transform: translateX(6px);
+  }
+  91% {
+    clip-path: inset(12% 0 60% 0);
+    transform: translateX(-5px);
+  }
+  95% {
+    clip-path: inset(40% 0 30% 0);
+    transform: translateX(3px);
+  }
+}
+@keyframes nf-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 /* 6. Overlays -------------------------------------------------------------- */
 dialog {
   border: 0;
@@ -1646,6 +1766,61 @@ html[data-motion="full"] .brand-name {
     text-shadow: none;
     transform: none;
   }
+}
+
+/* Subtle glitch accents. Colour split only (no shake) for the small ones. */
+@keyframes glitch-text {
+  0% {
+    text-shadow:
+      2px 0 var(--magenta),
+      -2px 0 var(--cyan);
+  }
+  50% {
+    text-shadow:
+      -2px 0 var(--magenta),
+      2px 0 var(--cyan);
+  }
+  100% {
+    text-shadow: none;
+  }
+}
+@keyframes glitch-idle {
+  0%,
+  90%,
+  100% {
+    text-shadow: none;
+  }
+  93% {
+    text-shadow:
+      2px 0 var(--magenta),
+      -2px 0 var(--cyan);
+  }
+  96% {
+    text-shadow:
+      -2px 0 var(--magenta),
+      2px 0 var(--cyan);
+  }
+}
+
+/* 1. Page titles, once when you open a page */
+html[data-motion="full"] #view h1.glitch-once {
+  animation: glitch 0.55s steps(2, end) 1;
+}
+/* 2. Modal titles, once when a dialog opens */
+html[data-motion="full"] dialog[open] .modal-head h2 {
+  animation: glitch 0.45s steps(2, end) 0.1s 1;
+}
+/* 3. Progress ring number, when the percentage changes */
+html[data-motion="full"] .ring.anim .ring-n {
+  animation: glitch 0.45s steps(2, end) 1;
+}
+/* 4. Error toasts */
+html[data-motion="full"] .toast.error span {
+  animation: glitch-text 0.4s steps(2, end) 1;
+}
+/* 5. Overtime timers flicker briefly every few seconds */
+html[data-motion="full"] .readout.over {
+  animation: glitch-idle 4s linear infinite;
 }
 
 /* 7. Responsive & motion --------------------------------------------------- */
@@ -1802,6 +1977,12 @@ html[data-motion="full"] .brand-name {
     left: 12px;
     bottom: 72px;
     justify-items: stretch;
+  }
+  .nf-card {
+    padding: 24px;
+  }
+  .nf-code {
+    font-size: 88px;
   }
 }
 
