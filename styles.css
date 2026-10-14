@@ -17,6 +17,7 @@
   --text: #ebe7ff;
   --muted: #9a92c4;
   --faint: #6a6296;
+  --grid: rgba(110, 90, 200, 0.07);
 
   --cyan: #19f3ff;
   --magenta: #ff2e9a;
@@ -43,6 +44,67 @@ html[data-accent="amber"] {
 html[data-accent="green"] {
   --accent: var(--mint);
   --accent-2: var(--cyan);
+}
+/* Preset themes: surface palettes. Neon is the default in :root above. */
+html[data-theme="synthwave"] {
+  --void: #14061f;
+  --deck: #1b0a2b;
+  --panel: #240d38;
+  --panel-2: #2e1248;
+  --line: #4a1d6b;
+  --line-2: #6a2a94;
+  --text: #fff0fb;
+  --muted: #c79bd6;
+  --faint: #8f6aa3;
+  --grid: rgba(255, 46, 154, 0.08);
+}
+html[data-theme="matrix"] {
+  --void: #020a05;
+  --deck: #04120a;
+  --panel: #071a0f;
+  --panel-2: #0b2416;
+  --line: #12402a;
+  --line-2: #1b5c3c;
+  --text: #dcffe9;
+  --muted: #7fbf9a;
+  --faint: #4f8566;
+  --grid: rgba(61, 255, 162, 0.06);
+}
+html[data-theme="ember"] {
+  --void: #0f0805;
+  --deck: #170c07;
+  --panel: #1f110a;
+  --panel-2: #2a170d;
+  --line: #4a2a16;
+  --line-2: #6b3d1f;
+  --text: #fff0e0;
+  --muted: #c9a07e;
+  --faint: #8f6d52;
+  --grid: rgba(255, 160, 60, 0.06);
+}
+html[data-theme="arctic"] {
+  --void: #040a14;
+  --deck: #071220;
+  --panel: #0b1a2d;
+  --panel-2: #102440;
+  --line: #1d3a5f;
+  --line-2: #2b5384;
+  --text: #e6f3ff;
+  --muted: #8fb0d1;
+  --faint: #5f7f9f;
+  --grid: rgba(25, 243, 255, 0.06);
+}
+html[data-theme="noir"] {
+  --void: #0a0a0a;
+  --deck: #101010;
+  --panel: #161616;
+  --panel-2: #1e1e1e;
+  --line: #2e2e2e;
+  --line-2: #444444;
+  --text: #f0f0f0;
+  --muted: #9a9a9a;
+  --faint: #666666;
+  --grid: rgba(255, 255, 255, 0.04);
 }
 
 /* 2. Base ------------------------------------------------------------------ */
@@ -258,8 +320,8 @@ html[data-motion="full"] .nav a.glitch svg {
   min-width: 0;
   position: relative;
   background-image:
-    linear-gradient(to right, rgba(110, 90, 200, 0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(110, 90, 200, 0.07) 1px, transparent 1px);
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
   background-size: 44px 44px;
 }
 .top {
@@ -1532,6 +1594,52 @@ button.cell:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+.themes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+.theme-card {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  text-align: left;
+}
+.theme-card:hover {
+  border-color: var(--line-2);
+  color: var(--text);
+}
+.theme-card.on {
+  border-color: var(--accent);
+  color: var(--text);
+  font-weight: 600;
+}
+.theme-prev {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  grid-template-rows: 10px 1fr;
+  gap: 4px;
+  height: 46px;
+  padding: 5px;
+  background: var(--bg);
+  border: 1px solid var(--ln);
+}
+.theme-prev i {
+  display: block;
+  background: var(--pn);
+  border: 1px solid var(--ln);
+}
+.theme-prev i:nth-child(1) {
+  grid-row: span 2;
+}
+.theme-prev i:nth-child(2) {
+  background: var(--ac);
+  border: 0;
 }
 .danger-zone {
   margin-top: 26px;

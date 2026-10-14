@@ -21,6 +21,14 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const PALETTE = [['Cyan', '#19f3ff'], ['Magenta', '#ff2e9a'], ['Amber', '#ffd23f'], ['Mint', '#3dffa2'], ['Violet', '#9b6bff'], ['Orange', '#ff7a3d']];
 const ACCENTS = [['cyan', 'Cyan', '#19f3ff'], ['magenta', 'Magenta', '#ff2e9a'], ['amber', 'Amber', '#ffd23f'], ['green', 'Mint', '#3dffa2']];
+const THEMES = [
+  ['neon', 'Neon', 'cyan', '#090612', '#140e27', '#2d2254'],
+  ['synthwave', 'Synthwave', 'magenta', '#14061f', '#240d38', '#4a1d6b'],
+  ['matrix', 'Matrix', 'green', '#020a05', '#071a0f', '#12402a'],
+  ['ember', 'Ember', 'amber', '#0f0805', '#1f110a', '#4a2a16'],
+  ['arctic', 'Arctic', 'cyan', '#040a14', '#0b1a2d', '#1d3a5f'],
+  ['noir', 'Noir', 'magenta', '#0a0a0a', '#161616', '#2e2e2e']
+];
 const safeColor = c => (/^#[0-9a-f]{6}$/i.test(c) ? c : PALETTE[0][1]);
 
 const PRI = { high: { label: 'High', rank: 0 }, med: { label: 'Medium', rank: 1 }, low: { label: 'Low', rank: 2 } };
@@ -64,7 +72,7 @@ const LEGACY_KEY = 'nightdesk.v1'; // pre-rebrand data, migrated on first load
 const DEFAULTS = () => ({
   v: 1,
   profile: null,
-  settings: { accent: 'cyan', scanlines: true, glow: true, reduceMotion: false, time24: true, weekStart: 1, sound: true },
+  settings: { accent: 'cyan', theme: 'neon', scanlines: true, glow: true, reduceMotion: false, time24: true, weekStart: 1, sound: true },
   tasks: [], projects: [], timers: [], routines: []
 });
 
@@ -90,6 +98,7 @@ function normalize(data) {
   const s = data.settings && typeof data.settings === 'object' ? data.settings : {};
   out.settings = {
     accent: ACCENTS.some(a => a[0] === s.accent) ? s.accent : d.settings.accent,
+    theme: THEMES.some(t => t[0] === s.theme) ? s.theme : d.settings.theme,
     scanlines: s.scanlines !== false,
     glow: s.glow !== false,
     reduceMotion: !!s.reduceMotion,
@@ -165,6 +174,7 @@ function save() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 150);
 function applySettings() {
   const s = state.settings, r = document.documentElement;
   r.dataset.accent = s.accent;
+  r.dataset.theme = s.theme;
   r.dataset.scan = s.scanlines ? 'on' : 'off';
   r.dataset.glow = s.glow ? 'on' : 'off';
   r.dataset.motion = s.reduceMotion ? 'reduce' : 'full';
@@ -647,6 +657,8 @@ function vAccount() {
   } else if (tab === 'appearance') {
     const sw = (key, label, hint) => `<label class="switch"><input type="checkbox" data-setting="${key}" ${s[key] ? 'checked' : ''}><span class="track"></span><span class="sw-text">${label}<small>${hint}</small></span></label>`;
     body = `<h2 class="sec-title">Appearance</h2><p class="muted-p" style="margin-bottom:18px">Changes apply immediately.</p>
+    <div class="field" style="margin-bottom:18px"><span>Theme</span>
+      <div class="themes" role="group" aria-label="Theme presets">${THEMES.map(([k, n, acc, bg, pn, ln]) => `<button type="button" class="theme-card ${s.theme === k ? 'on' : ''}" data-action="set-theme" data-id="${k}" aria-pressed="${s.theme === k}" style="--bg:${bg};--pn:${pn};--ln:${ln};--ac:${ACCENTS.find(a => a[0] === acc)[2]}"><span class="theme-prev"><i></i><i></i><i></i></span><span>${n}</span></button>`).join('')}</div></div>
     <div class="field" style="margin-bottom:12px"><span>Accent color</span>
       <div class="swatches">${ACCENTS.map(([k, n, hex]) => `<button type="button" class="sw ${s.accent === k ? 'on' : ''}" style="--c:${hex}" data-action="set-accent" data-id="${k}" aria-pressed="${s.accent === k}" aria-label="${n}"><span></span></button>`).join('')}</div></div>
     ${sw('scanlines', 'Scanlines', 'A faint CRT line texture over the whole screen')}
@@ -1073,6 +1085,13 @@ const actions = {
 
   'account-tab'(tab) { ui.accountTab = tab; render(); },
   'set-accent'(key) { state.settings.accent = key; applySettings(); save(); render(); },
+  'set-theme'(key) {
+    const th = THEMES.find(t => t[0] === key);
+    if (!th) return;
+    state.settings.theme = key;
+    state.settings.accent = th[2];   // each theme brings its matching accent
+    applySettings(); save(); render();
+  },
   'export'() { exportData(); },
   'open-data'() { ui.accountTab = 'data'; location.hash = '#/account'; },
   'import-pick'() { $('#import-file').click(); },
