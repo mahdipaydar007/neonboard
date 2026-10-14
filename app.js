@@ -325,14 +325,20 @@ function vDashboard() {
   const open = state.tasks.filter(t => t.status !== 'done');
   const dueToday = state.tasks.filter(t => t.due === t0);
   const overdue = open.filter(isOverdue);
-  const total = dueToday.length + overdue.length;
-  const done = dueToday.filter(t => t.status === 'done').length;
+  const doneToday = t => t.status === 'done' && t.doneAt && ymd(new Date(t.doneAt)) === t0;
+  // Planned today = due today + overdue + anything finished today (so completing a task counts)
+  const planned = state.tasks.filter(t => t.due === t0 || isOverdue(t) || doneToday(t));
+  const total = planned.length;
+  const done = planned.filter(t => t.status === 'done').length;
   const pct = total ? Math.round(done / total * 100) : 0;
   const C = 2 * Math.PI * 52;
   const running = state.timers.filter(t => t.startedAt).length;
   const next = sortTasks(open.filter(t => t.due && t.due > t0), 'due')[0];
   const name = state.profile ? state.profile.name : 'Runner';
-  const animate = !ui.ringAnimated; ui.ringAnimated = true;
+  const prevPct = ui.ringPct ?? 0;
+  const animate = ui.ringPct !== pct;   // animate whenever the value changes
+  ui.ringPct = pct;
+  const fromLen = (prevPct / 100 * C).toFixed(1);
 
   const todayList = sortTasks([...overdue, ...dueToday], 'priority').slice(0, 7);
   const upcoming = sortTasks(open.filter(t => t.due > t0), 'due').slice(0, 3);
@@ -348,7 +354,7 @@ function vDashboard() {
   return `
   <div class="grid">
     <section class="panel hot hero s12" aria-label="Today at a glance">
-      <div class="ring ${animate ? 'anim' : ''}" role="img" aria-label="${pct}% of today's planned tasks are done">
+      <div class="ring ${animate ? 'anim' : ''}" style="--from:${fromLen}" role="img" aria-label="${pct}% of today's planned tasks are done">
         <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="trk" cx="60" cy="60" r="52"/><circle class="val" cx="60" cy="60" r="52" stroke-dasharray="${(pct / 100 * C).toFixed(1)} ${C.toFixed(1)}"/></svg>
         <span class="ring-n glow">${pct}<small>%</small></span>
       </div>
@@ -435,6 +441,7 @@ function vTasks() {
       <select name="priority" aria-label="Priority">${options(PRI_PAIRS, 'med')}</select>
       <input type="date" name="due" aria-label="Due date">
       <button class="btn primary" type="submit">Add task</button>
+      <textarea class="quick-notes" name="notes" rows="2" maxlength="1000" placeholder="Notes (optional)" aria-label="Notes"></textarea>
     </form>
     <div class="filters">
       <label class="field inline"><span>Show</span><select data-filter="status">${options([['open', 'Open'], ['all', 'All'], ['todo', 'To do'], ['doing', 'In progress'], ['done', 'Done']], f.status)}</select></label>
@@ -952,6 +959,7 @@ const actions = {
       try { localStorage.removeItem(STORE_KEY); } catch (_) { /* ignore */ }
       state = DEFAULTS(); ui.savedAt = null;
       applySettings(); location.hash = '#/dashboard'; route();
+      setTimeout(welcome, 0);
     });
   }
 };
@@ -961,7 +969,7 @@ const forms = {
     const title = String(fd.get('title')).trim();
     if (!title) return;
     const projectId = !['all', 'none'].includes(ui.filters.project) ? ui.filters.project : '';
-    addTask({ title, priority: fd.get('priority'), due: fd.get('due'), projectId });
+    addTask({ title, notes: fd.get('notes'), priority: fd.get('priority'), due: fd.get('due'), projectId });
     ui.refocus = '#quick-title';
     render();
   },
@@ -1019,8 +1027,12 @@ document.addEventListener('submit', e => {
 
 document.addEventListener('change', e => {
   const t = e.target;
-  if (t.id === 'import-file') { importData(t.files[0]); t.value = ''; return; }
-  if (t.dataset.filter) { ui.filters[t.dataset.filter] = t.value; render(); return; }
+  if (t.id === 'import-file') {
+    importData(t.files[0]); t.value = ''; return;
+  }
+  if (t.dataset.filter) {
+    ui.filters[t.dataset.filter] = t.value; ui.refocus = `[data-filter="${t.dataset.filter}"]`; render(); return;
+  }
   if (t.dataset.setting) {
     const key = t.dataset.setting;
     state.settings[key] = t.type === 'checkbox' ? t.checked : Number(t.value);

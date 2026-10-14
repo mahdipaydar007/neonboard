@@ -935,7 +935,7 @@ html[data-glow="on"] .ring .val {
 }
 @keyframes ring-in {
   from {
-    stroke-dasharray: 0 400;
+    stroke-dasharray: var(--from, 0) 400;
   }
 }
 
@@ -1031,6 +1031,9 @@ html[data-glow="on"] .ring .val {
   display: grid;
   grid-template-columns: 1fr 140px 160px auto;
   gap: 10px;
+}
+.quick-notes {
+  grid-column: 1 / -1;
 }
 .filters {
   display: flex;
