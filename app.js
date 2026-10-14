@@ -63,7 +63,7 @@ const LEGACY_KEY = 'nightdesk.v1'; // pre-rebrand data, migrated on first load
 const DEFAULTS = () => ({
   v: 1,
   profile: null,
-  settings: { accent: 'cyan', scanlines: true, glow: true, reduceMotion: false, time24: true, weekStart: 1 },
+  settings: { accent: 'cyan', scanlines: true, glow: true, reduceMotion: false, time24: true, weekStart: 1, sound: true },
   tasks: [], projects: [], timers: [], routines: []
 });
 
@@ -93,6 +93,7 @@ function normalize(data) {
     glow: s.glow !== false,
     reduceMotion: !!s.reduceMotion,
     time24: s.time24 !== false,
+    sound: s.sound !== false,
     weekStart: [0, 1, 6].includes(Number(s.weekStart)) ? Number(s.weekStart) : 1
   };
   out.projects = objs(data.projects).map(p => ({ id: safeId(p.id), name: str(p.name, 60) || 'Untitled', desc: str(p.desc, 200), color: safeColor(p.color) }));
@@ -431,10 +432,12 @@ function vTasks() {
   });
   list = sortTasks(list, f.sort);
   const openCount = state.tasks.filter(t => t.status !== 'done').length;
+  const doneCount = state.tasks.filter(t => t.status === 'done').length;
   const projOpts = [['all', 'All projects'], ['none', 'No project'], ...state.projects.map(p => [p.id, p.name])];
 
   return `
-  <div class="page-head"><div><h1>Tasks</h1><p class="sub">${list.length} shown, ${openCount} open</p></div></div>
+  <div class="page-head"><div><h1>Tasks</h1><p class="sub">${list.length} shown, ${openCount} open</p></div>
+  ${doneCount ? `<button class="btn ghost sm" type="button" data-action="clear-completed">${icon('trash')}Clear completed (${doneCount})</button>` : ''}</div>
   <section class="panel">
     <form class="quick" data-form="quick-task">
       <input id="quick-title" name="title" required maxlength="140" placeholder="Add a task and press Enter" aria-label="Task title" autocomplete="off">
@@ -554,6 +557,7 @@ function vBoard(p) {
   const st = projectStats(p.id);
   const kcard = t => `<article class="kcard" draggable="true" data-id="${t.id}" style="--c:${t.priority === 'high' ? 'var(--red)' : t.priority === 'med' ? 'var(--amber)' : 'var(--cyan)'}">
     <p class="k-title">${esc(t.title)}</p>
+    ${t.notes ? `<p class="k-note">${esc(t.notes.split('\n')[0])}</p>` : ''} 
     <div class="task-meta">${t.due ? `<span class="chip ${isOverdue(t) ? 'late' : ''}">${esc(dueLabel(t.due))}</span>` : ''}<span class="chip pri-${t.priority}">${PRI[t.priority].label}</span></div>
     <div class="k-actions">
       <button class="icon-btn" type="button" data-action="move-task" data-id="${t.id}" data-dir="-1" aria-label="Move to previous column" ${t.status === 'todo' ? 'disabled' : ''}>${icon('left')}</button>
@@ -646,6 +650,7 @@ function vAccount() {
     ${sw('glow', 'Neon glow', 'Glowing headings and the progress ring')}
     ${sw('reduceMotion', 'Reduce motion', 'Turns off animations and transitions')}
     ${sw('time24', '24-hour clock', 'Off shows 12-hour time')}
+    ${sw('sound', 'Timer sound', 'Play a beep when a countdown finishes')}
     <label class="field" style="margin-top:16px;max-width:260px"><span>Week starts on</span>
       <select data-setting="weekStart">${options([[1, 'Monday'], [0, 'Sunday'], [6, 'Saturday']], s.weekStart)}</select></label>`;
   } else if (tab === 'data') {
@@ -886,6 +891,13 @@ const actions = {
     save(); render();
     toast('Task deleted', 'info', { label: 'Undo', fn() { state.tasks.splice(Math.min(i, state.tasks.length), 0, removed); save(); render(); } });
   },
+  'clear-completed'() {
+    const removed = state.tasks.filter(t => t.status === 'done');
+    if (!removed.length) return;
+    state.tasks = state.tasks.filter(t => t.status !== 'done');
+    save(); render();
+    toast(`${removed.length} completed ${removed.length === 1 ? 'task' : 'tasks'} cleared`, 'info', { label: 'Undo', fn() { state.tasks.push(...removed); save(); render(); } });
+  },
   'move-task'(id, el) {
     const t = taskOf(id), dir = Number(el.dataset.dir);
     if (!t) return;
@@ -1102,9 +1114,47 @@ function tickClock() {
   $('#clock-time').textContent = timeStr(now);
   $('#clock-date').textContent = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
+/* Timer alerts: a short beep, plus the running time in the tab title. */
+let audioCtx = null;
+function unlockAudio() {
+  if (audioCtx && audioCtx.state === 'running') return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (_) { /* audio unavailable */ }
+}
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, unlockAudio));
+
+function beep() {
+  if (!state.settings.sound || !audioCtx || audioCtx.state !== 'running') return;
+  const now = audioCtx.currentTime;
+  [0, 0.25, 0.5].forEach(o => {
+    const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = 880;
+    g.gain.setValueAtTime(0.0001, now + o);
+    g.gain.exponentialRampToValueAtTime(0.12, now + o + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + o + 0.18);
+    osc.connect(g).connect(audioCtx.destination);
+    osc.start(now + o);
+    osc.stop(now + o + 0.2);
+  });
+}
+
+const BASE_TITLE = document.title;
+function updateTitle() {
+  const running = state.timers.filter(t => t.startedAt);
+  if (!running.length) { document.title = BASE_TITLE; return; }
+  const left = t => t.target * 60000 - elapsedOf(t);
+  const pick = running.filter(t => t.target && left(t) >= 0).sort((a, b) => left(a) - left(b))[0] || running[0];
+  const d = timerDisplay(pick);
+  const more = running.length > 1 ? ` (+${running.length - 1})` : '';
+  document.title = `${d.over ? '⏰ ' : ''}${d.text} ${pick.label}${more} · ${BASE_TITLE}`;
+}
 function tick() {
   tickClock();
   if (todayStr() !== ui.day) { ui.day = todayStr(); render(); return; }
+  if (ui.stale && !typingInView()) { ui.stale = false; render(); return; }
   state.timers.forEach(t => {
     const d = timerDisplay(t);
     $$(`[data-timer="${t.id}"]`).forEach(el => { el.textContent = d.text; el.classList.toggle('over', d.over); });
@@ -1112,12 +1162,37 @@ function tick() {
     if (t.target && t.startedAt && d.over && !ui.notified.has(t.id)) {
       ui.notified.add(t.id);
       toast(`Timer finished: ${t.label}`, 'good');
+      beep();
     }
   });
+  updateTitle();
 }
+
+/* Sync between tabs: when another tab saves, adopt its data. */
+function typingInView() {
+  const a = document.activeElement;
+  return !!a && $('#view').contains(a) && /INPUT|TEXTAREA/.test(a.tagName) && !!a.value;
+}
+function syncFromStorage(raw) {
+  let next;
+  try { next = raw ? normalize(JSON.parse(raw)) : DEFAULTS(); } catch (_) { return; }
+  clearTimeout(saveTimer);                 // drop any pending save of the old state
+  const dlg = $('#modal');
+  if (dlg.open) dlg.close();               // an open form would edit objects that no longer exist
+  state = next;
+  applySettings();
+  if (typingInView()) ui.stale = true;     // don't wipe text the user is typing
+  else render();
+  if (!state.profile) welcome();           // the other tab deleted all data
+}
+window.addEventListener('storage', e => {
+  if (e.key !== null && e.key !== STORE_KEY) return;
+  syncFromStorage(e.key === null ? null : e.newValue);
+});
 
 /* 7. Boot ------------------------------------------------------------------ */
 applySettings();
+state.timers.forEach(t => { if (t.target && t.startedAt && timerDisplay(t).over) ui.notified.add(t.id);});
 route();
 if (!state.profile) welcome();
 setInterval(tick, 1000);

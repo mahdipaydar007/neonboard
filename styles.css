@@ -1314,6 +1314,17 @@ html[data-glow="on"] .ring .val {
   font-weight: 500;
   overflow-wrap: anywhere;
 }
+.k-note {
+  color: var(--muted);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kcard,
+.col-body {
+  min-width: 0;
+}
 .k-actions {
   display: flex;
   gap: 2px;
