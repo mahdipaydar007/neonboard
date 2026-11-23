@@ -1,92 +1,56 @@
-![Neonboard logo](logo.svg)
-
 # Neonboard
 
-A fast, private, cyberpunk-styled task tracker that runs entirely in your browser. No server, no sign-up, no dependencies.
+Neonboard is a local-first personal management workspace built with React, TypeScript, Vite and Sass.
 
----
+## Requirements
 
-## Overview
+- Node.js 20 or newer
+- npm
 
-Neonboard brings tasks, projects, a calendar, timers and recurring routines together in one dark, neon-accented interface. Everything is stored locally in your browser, so it works offline and your data never leaves your device.
-
-It is built with plain HTML, CSS and vanilla JavaScript, with no framework, package manager or build step.
-
-## Features
-
-- **Dashboard** with today's tasks, overdue items, upcoming deadlines, routines due today and a weekly completion chart.
-- **Tasks** with priority (high, medium, low), status (to do, in progress, done), due dates, project assignment, filtering, sorting and search.
-- **Projects** with progress tracking and a **Kanban board**. Drag cards between columns, or use the move buttons for keyboard-only control.
-- **Calendar** month view showing the tasks due on each day.
-- **Timers** to track time spent, with play, pause and reset.
-- **Routines** for recurring habits on the days you choose, with a completion grid and streak counter.
-- **Customization:** four accent colors (cyan, magenta, amber, mint), optional scanlines and glow, reduced-motion mode, 12 or 24-hour clock and a configurable first day of the week.
-- **Backup and restore:** export all data to JSON and import it back at any time.
-- **Accessible by design:** skip link, labelled controls, keyboard-operable interface and a reduce-motion setting.
-
-## Keyboard shortcuts
-
-| Key | Action                |
-| --- | --------------------- |
-| `/` | Focus the search box  |
-| `n` | Create a new task     |
-| `Esc` | Close the open dialog |
-
-## Getting started
-
-No installation is needed.
+## Setup
 
 ```bash
-git clone https://github.com/mahdipaydar007/neonboard
-cd neonboard
+npm install
+npm run dev
 ```
 
-Open `index.html` in a modern browser, or serve the folder locally:
+Run a production build with:
 
 ```bash
-python3 -m http.server 8000
+npm run build
 ```
 
-Then visit http://localhost:8000.
+## Modules in this build
 
-## Project structure
+- Overview dashboard with configurable panels
+- Tasks with edit, delete, due dates, status, priority and project assignment
+- Projects with edit, delete and progress summaries
+- Calendar with editable events, task due dates and daily agenda
+- Direct-manipulation connections board: drag from an item's output dot to another item's input dot
+- Markdown notes with write and preview modes
+- Finance with editable transactions, custom categories and expense analysis
+- Encrypted local password vault (AES-GCM encryption, PBKDF2-derived key) with its own encrypted JSON import/export
+- Multiple local workspaces
+- Local profile sign-in screen
+- Preferences for theme, saved light/dark theme presets, accent, typeface, five text-size presets, navigation, currency and dashboard panels
+- In-dashboard edit mode for panel ordering, visibility and width
+- Workspace JSON import/export and task CSV export
+- Danger-zone controls for clearing workspace data, deleting a workspace or deleting the local profile
 
+## Storage and authentication limitations
+
+Workspace data is stored in IndexedDB in the current browser. Workspaces do not synchronize between devices. The sign-in screen manages a local device profile only; it is not server authentication and does not create a cloud account.
+
+Workspace JSON import replaces the active workspace after confirmation. Vault backups are separate encrypted files and require the original vault passphrase to restore. Finance currency selection changes display formatting only; it does not convert historical amounts or fetch exchange rates.
+
+The password vault uses a separate passphrase. The passphrase is not stored, and there is no password recovery. The vault implementation has not undergone an independent security audit. Do not use this prototype as the only storage location for critical credentials.
+
+Export regular JSON backups and store them somewhere separate from this device. Deleting an account or workspace is destructive and cannot be undone from the application.
+
+## Useful commands
+
+```bash
+npm run typecheck
+npm run build
+npm run preview
 ```
-neonboard/
-├── index.html    # App shell: sidebar, top bar, view container and dialog
-├── styles.css    # Theme tokens, layout, components and animation
-├── app.js        # State and storage, views, modals, actions and routing
-├── logo.svg      # Brand logo
-├── favicon.svg   # Browser tab icon
-└── README.md
-```
-
-`app.js` is organized into helpers, state and storage, domain helpers, views, modals, actions and events, and boot.
-
-## Data and privacy
-
-- All data is saved to your browser's `localStorage` under the key `neonboard.v1`. Nothing is sent to a server.
-- Clearing site data or switching browsers removes your data, so use **Account → Export backup** regularly.
-- Imported and stored data is validated before use.
-- The only external request is Google Fonts (Chakra Petch and Share Tech Mono). The interface falls back to system fonts if they cannot load.
-- Upgrading from the earlier Nightdesk build? Existing data is migrated automatically on first load.
-
-## Customization
-
-Colors, spacing and fonts are CSS custom properties at the top of `styles.css`, including the cyan and magenta neon palette, so you can re-theme the app by editing a few values. Default accent, scanlines, glow, motion and clock preferences can also be changed in the in-app settings.
-
-## Browser support
-
-Current versions of Chrome, Edge, Firefox and Safari.
-
-## Contributing
-
-Issues and pull requests are welcome. For larger changes, please open an issue first to discuss the proposal.
-
-1. Fork the repository
-2. Create a branch (`git checkout -b feature/your-feature`)
-3. Commit your changes
-4. Push the branch and open a pull request
-
-## License
-This repository contains *MIT* license
