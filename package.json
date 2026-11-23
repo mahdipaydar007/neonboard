@@ -14,7 +14,6 @@
     "@fontsource-variable/dm-sans": "^5.2.6",
     "@fontsource-variable/jetbrains-mono": "^5.2.6",
     "@fontsource-variable/manrope": "^5.2.6",
-    "@supabase/supabase-js": "^2.119.2",
     "@vitejs/plugin-react": "^4.4.1",
     "dexie": "^4.0.11",
     "lucide-react": "^0.468.0",
