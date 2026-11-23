@@ -1,13 +1,14 @@
 {
   "name": "neonboard",
   "private": true,
-  "version": "2.2.0",
+  "version": "2.3.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b --pretty"
+    "typecheck": "tsc -b --pretty",
+    "check": "npm run typecheck && npm run build"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.2.6",

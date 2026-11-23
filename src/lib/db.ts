@@ -1,9 +1,10 @@
 import Dexie, { type Table } from 'dexie';
 import type { AppData } from '../types';
+import { decryptWorkspaceData, encryptWorkspaceData } from './storageCrypto';
 
-export interface EncryptedVaultRecord { id: 'local-vault'; salt: string; iv: string; ciphertext: string; updatedAt: string; }
+export interface EncryptedVaultRecord { id: 'local-vault'; salt: string; iv: string; ciphertext: string; updatedAt: string; iterations?: number; }
 class NeonboardDatabase extends Dexie {
-  snapshots!: Table<{ id: string; data: AppData; savedAt: string }, string>;
+  snapshots!: Table<{ id: string; data?: AppData; encrypted?: { iv: string; ciphertext: string }; savedAt: string }, string>;
   vaults!: Table<EncryptedVaultRecord, string>;
   constructor() {
     super('NeonboardDB');
@@ -15,8 +16,14 @@ export const db = new NeonboardDatabase();
 const legacySnapshotId = (workspaceId: string) => workspaceId === 'personal' ? 'workspace' : `workspace:${workspaceId}`;
 
 export async function loadWorkspace(workspaceId = 'personal'): Promise<AppData | null> {
-  const saved = await db.snapshots.get(legacySnapshotId(workspaceId));
-  if (saved) return saved.data;
+  const snapshotId = legacySnapshotId(workspaceId);
+  const saved = await db.snapshots.get(snapshotId);
+  if (saved?.encrypted) return decryptWorkspaceData<AppData>(saved.encrypted, snapshotId);
+  if (saved?.data) {
+    // One-time migration: encrypt legacy plaintext snapshots after the user unlocks the local profile.
+    await saveWorkspace(saved.data, workspaceId);
+    return saved.data;
+  }
   if (workspaceId !== 'personal') return null;
   try {
     const legacy = localStorage.getItem('neonboard.v1') ?? localStorage.getItem('nightdesk.v1');
@@ -37,7 +44,9 @@ export async function loadWorkspace(workspaceId = 'personal'): Promise<AppData |
   } catch { return null; }
 }
 export async function saveWorkspace(data: AppData, workspaceId = 'personal'): Promise<void> {
-  await db.snapshots.put({ id: legacySnapshotId(workspaceId), data, savedAt: new Date().toISOString() });
+  const id = legacySnapshotId(workspaceId);
+  const encrypted = await encryptWorkspaceData(data, id);
+  await db.snapshots.put({ id, encrypted, savedAt: new Date().toISOString() });
 }
 export async function removeWorkspaceData(workspaceId: string): Promise<void> {
   await db.snapshots.delete(legacySnapshotId(workspaceId));
@@ -51,13 +60,16 @@ export async function saveVault(record: EncryptedVaultRecord): Promise<void> { a
 export async function clearVault(): Promise<void> { await db.vaults.delete('local-vault'); }
 
 export function defaultPreferences(): AppData['preferences'] {
-  return { theme: 'system', accent: '#6477c8', font: 'dm-sans', fontScale: 2, reducedMotion: false, currency: 'EUR', themePresets: [] };
+  return { theme: 'system', accent: '#6477c8', font: 'dm-sans', fontScale: 2, reducedMotion: false, currency: 'IRT', language: 'en', themePresets: [] };
+}
+export function defaultAcademicData(): AppData['academic'] {
+  return { profile: { university: '', faculty: '', major: '', studentId: '', level: 'bachelor', totalProgramCredits: 140, passGrade: 10, probationGpa: 12, normalMinCredits: 12, normalMaxCredits: 20 }, semesters: [], courses: [], assessments: [], attendance: [], studySessions: [] };
 }
 export function defaultAppData(): AppData {
   return {
     tasks: [], projects: [], notes: [], transactions: [], events: [], connections: [], nodePositions: {},
     categories: ['General', 'Groceries', 'Housing', 'Transport', 'Health', 'Entertainment', 'Education', 'Salary', 'Freelance', 'Other'],
     dashboardPanels: ['tasks', 'projects', 'finance'], dashboardPanelSizes: { tasks:'standard', projects:'standard', finance:'wide' }, preferences: defaultPreferences(),
-    navOrder: ['dashboard','tasks','projects','calendar','connections','notes','finance','vault','guide','settings'], hiddenNav: []
+    navOrder: ['dashboard','tasks','projects','calendar','connections','notes','finance','vault','guide','university','settings'], hiddenNav: [], academic: defaultAcademicData()
   };
 }
